@@ -13,10 +13,12 @@ plugins {
 }
 
 dependencies {
-    implementation('io.github.spencerpark:jupyter-jvm-basekernel:2.3.0') {
-        exclude group: 'com.google.code.gson', module: 'gson'
-    }
-    implementation 'com.google.code.gson:gson:2.10'
+    implementation(project(":jupyter-jvm-basekernel"))
+
+//    implementation('io.github.spencerpark:jupyter-jvm-basekernel:2.3.0') {
+//        exclude group: 'com.google.code.gson', module: 'gson'
+//    }
+//    implementation 'com.google.code.gson:gson:2.10'
 
     // ------ for maven resolve and download ------
     // implementation 'org.apache.maven:maven-resolver-provider:4.0.0-alpha-2'

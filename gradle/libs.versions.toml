@@ -1,4 +1,6 @@
 [versions]
+jeromqVersion = "0.6.0"
+gsonVersion = "2.13.1"
 slf4jVersion = "2.0.17"
 log4jVersion = "2.24.3"
 
@@ -6,6 +8,9 @@ junitVersion = "5.12.1"
 assertjVersion = "3.27.3"
 
 [libraries]
+gson = { group = "com.google.code.gson", name = "gson", version.ref = "gsonVersion" }
+jeromq = { group = "org.zeromq", name = "jeromq", version.ref = "jeromqVersion" }
+
 # logging
 slf4j-api = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4jVersion" }
 log4j-slf4j-impl = { group = "org.apache.logging.log4j", name = "log4j-slf4j-impl", version.ref = "log4jVersion" }

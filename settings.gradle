@@ -1,3 +1,4 @@
 rootProject.name = 'ijava'
 
 include 'ijava'
+include 'jupyter-jvm-basekernel'
