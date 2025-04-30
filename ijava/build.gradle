@@ -1,0 +1,115 @@
+import com.github.jk1.license.filter.LicenseBundleNormalizer
+import com.github.jk1.license.render.InventoryHtmlReportRenderer
+import com.github.jk1.license.render.JsonReportRenderer
+import org.apache.tools.ant.filters.ReplaceTokens
+
+plugins {
+    id 'application'
+    alias(libs.plugins.shadowJar)
+    alias(libs.plugins.lombok)
+
+    id 'com.github.hierynomus.license' version '0.16.1'
+    id "com.github.jk1.dependency-license-report" version "2.1"
+}
+
+dependencies {
+    implementation('io.github.spencerpark:jupyter-jvm-basekernel:2.3.0') {
+        exclude group: 'com.google.code.gson', module: 'gson'
+    }
+    implementation 'com.google.code.gson:gson:2.10'
+
+    // ------ for maven resolve and download ------
+    // implementation 'org.apache.maven:maven-resolver-provider:4.0.0-alpha-2'
+    implementation('org.apache.maven:maven-resolver-provider:3.8.6') {
+        exclude group: 'org.apache.maven.resolver'  // manual include 1.8.2
+    }
+    implementation 'org.apache.maven.resolver:maven-resolver-impl:1.8.2'
+    implementation 'org.apache.maven.resolver:maven-resolver-connector-basic:1.8.2'
+    implementation 'org.apache.maven.resolver:maven-resolver-transport-file:1.8.2'
+    implementation 'org.apache.maven.resolver:maven-resolver-transport-http:1.8.2'
+    implementation 'org.apache.maven.resolver:maven-resolver-transport-classpath:1.8.2'
+    // ------ for maven resolve and download ------
+
+//    implementation 'org.apache.logging.log4j:log4j-core:2.19.0'
+
+    testImplementation group: 'junit', name: 'junit', version: '4.13.2'
+}
+
+// Add the license header to source files
+license {
+    header = file('LICENSE')
+    include "**/*.java"
+    exclude "**/Test*.java"
+    mapping java: 'SLASHSTAR_STYLE'
+    ext.year = Calendar.getInstance().get(Calendar.YEAR)
+}
+licenseMain.dependsOn 'licenseFormat'
+
+// replace @symbol@ in properties
+processResources {
+    def tokens = [
+            'version': project.version,
+            'project': project.name
+    ]
+    inputs.properties(tokens)
+    filter tokens: tokens, ReplaceTokens
+}
+
+//java {
+//    withJavadocJar()
+//    withSourcesJar()
+//}
+
+application {
+    mainClass = 'io.github.spencerpark.ijava.IJava'
+}
+
+tasks.jar {
+    manifest {
+        attributes["Main-Class"] = application.mainClass.get()
+    }
+}
+
+// shadow Jar config
+tasks.shadowJar {
+    enableRelocation = true
+    relocationPrefix = "io.github.spencerpark.shadow"
+    // copy build.gradle to shadowed jar
+    from("./build.gradle")
+}
+
+// create license report
+licenseReport {
+    renderers = [
+            new InventoryHtmlReportRenderer('license-report.html'),
+            new JsonReportRenderer('license-report.json')
+    ]
+
+    filters = [new LicenseBundleNormalizer()]
+}
+
+// pack up
+tasks.register('packDist', Zip) {
+    archiveFileName = project.name + "-latest.zip"
+
+    from(layout.buildDirectory.dir("resources/main")) {
+        include "install.py"
+    }
+
+    from(layout.buildDirectory.dir("libs")) {
+        include "*-all.jar"
+        into "java"
+    }
+
+    from(layout.buildDirectory.dir("resources/main")) {
+        include "kernel.json"
+        into "java"
+    }
+
+    from(layout.buildDirectory.dir("reports/dependency-license")) {
+        into "java/dependency-license"
+    }
+
+    dependsOn generateLicenseReport
+    dependsOn shadowJar
+}

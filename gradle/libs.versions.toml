@@ -1,0 +1,26 @@
+[versions]
+slf4jVersion = "2.0.17"
+log4jVersion = "2.24.3"
+
+junitVersion = "5.12.1"
+assertjVersion = "3.27.3"
+
+[libraries]
+# logging
+slf4j-api = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4jVersion" }
+log4j-slf4j-impl = { group = "org.apache.logging.log4j", name = "log4j-slf4j-impl", version.ref = "log4jVersion" }
+log4j-api = { group = "org.apache.logging.log4j", name = "log4j-api", version.ref = "log4jVersion" }
+log4j-core = { group = "org.apache.logging.log4j", name = "log4j-core", version.ref = "log4jVersion" }
+
+# Testing
+junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junitVersion" }
+junit-jupiter-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junitVersion" }
+assertj-core = { group = "org.assertj", name = "assertj-core", version.ref = "assertjVersion" }
+
+[plugins]
+shadowJar = { id = "com.gradleup.shadow", version = "8.3.6" }
+lombok = { id = "io.freefair.lombok", version = "8.13.1" }
+
+[bundles]
+logging = ["slf4j-api", "log4j-slf4j-impl", "log4j-api", "log4j-core"]
+tests = ["junit-jupiter", "junit-jupiter-engine", "assertj-core"]
