@@ -6,7 +6,6 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
-import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
@@ -14,19 +13,18 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.resolution.DependencyResult;
-import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
+import org.eclipse.aether.supplier.RepositorySystemSupplier;
 import org.eclipse.aether.transport.classpath.ClasspathTransporterFactory;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
+import org.eclipse.aether.transport.http.ChecksumExtractor;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
 import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.filter.DependencyFilterUtils;
 import org.eclipse.aether.util.graph.visitor.PreorderNodeListGenerator;
 
 import java.io.File;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class ResolveDependency {
     private static final String DEFAULT_REPO_LOCAL = String.format("%s/.m2/repository", System.getProperty("user.home"));
@@ -36,14 +34,7 @@ public class ResolveDependency {
     private static final RepositorySystem system;
 
     static {
-        var locator = MavenRepositorySystemUtils.newServiceLocator();
-
-        locator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
-        locator.addService(TransporterFactory.class, FileTransporterFactory.class);
-        locator.addService(TransporterFactory.class, HttpTransporterFactory.class);
-        locator.addService(TransporterFactory.class, ClasspathTransporterFactory.class);
-
-        system = locator.getService(RepositorySystem.class);
+        system = new RepositorySystemSupplierWithCustom().get();
     }
 
     public static List<String> resolve(String... coords) throws DependencyResolutionException, NoLocalRepositoryManagerException {
@@ -86,25 +77,14 @@ public class ResolveDependency {
         return session;
     }
 
-    public static void main(String[] args) {
-        test();
-    }
-
-    public static void test() {
-        String localRepo = "out";
-        List<RemoteRepository> remotes = List.of(
-                DEFAULT_REPO_REMOTE,
-                new RemoteRepository.Builder("aliyun", "default", "https://maven.aliyun.com/repository/central").build()
-        );
-        try {
-            var coords = List.of(
-                    "org.apache.logging.log4j:log4j-core:2.19.0",
-                    "org.apache.logging.log4j:log4j-core:2.19.0"
-            );
-            List<String> jars = resolve(coords, null, localRepo, remotes);
-            System.out.printf(">>>>>> jars: %s%n", jars);
-        } catch (DependencyResolutionException | NoLocalRepositoryManagerException e) {
-            e.printStackTrace();
+    static class RepositorySystemSupplierWithCustom extends RepositorySystemSupplier {
+        @Override
+        protected Map<String, TransporterFactory> getTransporterFactories(Map<String, ChecksumExtractor> extractors) {
+            HashMap<String, TransporterFactory> result = new HashMap<>();
+            result.put(FileTransporterFactory.NAME, new FileTransporterFactory());
+            result.put(HttpTransporterFactory.NAME, new HttpTransporterFactory(extractors));
+            result.put(ClasspathTransporterFactory.NAME, new ClasspathTransporterFactory());
+            return result;
         }
     }
 }

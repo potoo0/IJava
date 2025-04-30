@@ -1,6 +1,9 @@
 [versions]
 jeromqVersion = "0.6.0"
 gsonVersion = "2.13.1"
+mavenVersion = "3.9.9"
+mavenResolverVersion = "1.9.22" # 2.x 需要 maven 4.x, 目前 maven 4.x 处于 RC, 并且没有 RepositorySystemSupplier
+
 slf4jVersion = "2.0.17"
 log4jVersion = "2.24.3"
 
@@ -10,6 +13,11 @@ assertjVersion = "3.27.3"
 [libraries]
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gsonVersion" }
 jeromq = { group = "org.zeromq", name = "jeromq", version.ref = "jeromqVersion" }
+
+# maven
+maven-model = { group = "org.apache.maven", name = "maven-model", version.ref = "mavenVersion" }
+maven-resolver-supplier = { group = "org.apache.maven.resolver", name = "maven-resolver-supplier", version.ref = "mavenResolverVersion" }
+maven-resolver-transport-classpath = { group = "org.apache.maven.resolver", name = "maven-resolver-transport-classpath", version.ref = "mavenResolverVersion" }
 
 # logging
 slf4j-api = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4jVersion" }
@@ -27,5 +35,6 @@ shadowJar = { id = "com.gradleup.shadow", version = "8.3.6" }
 lombok = { id = "io.freefair.lombok", version = "8.13.1" }
 
 [bundles]
-logging = ["slf4j-api", "log4j-slf4j-impl", "log4j-api", "log4j-core"]
+maven = ["maven-model", "maven-resolver-supplier", "maven-resolver-transport-classpath"]
+logging = ["log4j-slf4j-impl", "log4j-api", "log4j-core"]
 tests = ["junit-jupiter", "junit-jupiter-engine", "assertj-core"]
